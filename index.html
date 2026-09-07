@@ -1,163 +1,370 @@
+
 <!DOCTYPE html>
 <html lang="ckb" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Telegram Mini App</title>
-    <!-- Telegram WebApp SDK -->
+    <title>Tap to Earn Ultra</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #f59e0b;
+            --text-color: #ffffff;
+        }
+
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
             user-select: none;
             -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
         }
 
         body {
-            background-color: #0f172a;
-            color: #ffffff;
-            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
             height: 100vh;
-            padding: 24px 16px;
             overflow: hidden;
+            justify-content: space-between;
         }
 
+        /* Header / Stats */
         .header {
+            padding: 20px;
             text-align: center;
-            margin-top: 10px;
+            background: var(--card-bg);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        .username {
-            font-size: 18px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .score-box {
-            font-size: 48px;
-            font-weight: 800;
-            color: #fbbf24;
-            margin-top: 8px;
+        .score-container {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
-        .coin-area {
-            display: flex;
-            justify-content: center;
+        /* Content Sections */
+        .tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
             align-items: center;
-            position: relative;
-            width: 100%;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
         }
 
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Tap Game Tab */
         .coin-btn {
-            width: 220px;
-            height: 220px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             background: radial-gradient(circle, #fbbf24 0%, #d97706 100%);
-            box-shadow: 0 0 40px rgba(251, 191, 36, 0.35);
-            border: 6px solid rgba(255, 255, 255, 0.15);
-            font-size: 80px;
+            border: 8px solid #fef08a;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 5rem;
             cursor: pointer;
-            transition: transform 0.08s ease;
+            transition: transform 0.05s ease;
+            position: relative;
         }
 
         .coin-btn:active {
-            transform: scale(0.92);
+            transform: scale(0.95);
         }
 
+        /* Energy Bar */
+        .energy-container {
+            width: 100%;
+            max-width: 300px;
+            margin-top: 30px;
+        }
+
+        .energy-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.2s ease;
+        }
+
+        /* Upgrades & Features Lists */
+        .card-list {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #334155;
+        }
+
+        .card button {
+            background: var(--accent-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            background: var(--card-bg);
+            border-top: 1px solid #334155;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Floating Text (+1) */
         .floating-text {
             position: absolute;
-            font-size: 32px;
-            font-weight: 900;
+            font-size: 1.8rem;
+            font-weight: bold;
             color: #ffffff;
             pointer-events: none;
-            animation: floatUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: floatUp 0.8s ease-out forwards;
         }
 
         @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-90px) scale(1.2); }
-        }
-
-        .footer {
-            color: #64748b;
-            font-size: 14px;
-            text-align: center;
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
         }
     </style>
 </head>
 <body>
 
+    <!-- Header / Total Score -->
     <div class="header">
-        <div class="username" id="userName">سڵاو بەکارهێنەر!</div>
-        <div class="score-box">
+        <div style="font-size: 0.9rem; color: #94a3b8;">باڵانسی گشتی</div>
+        <div class="score-container">
             🪙 <span id="score">0</span>
         </div>
     </div>
 
-    <div class="coin-area">
-        <div class="coin-btn" id="coinBtn">⚡</div>
+    <!-- TAB 1: TAP GAME -->
+    <div id="tab-game" class="tab-content active">
+        <div class="coin-btn" id="coin">🪙</div>
+
+        <div class="energy-container">
+            <div class="energy-info">
+                <span>⚡ وزە</span>
+                <span id="energy-text">1000 / 1000</span>
+            </div>
+            <div class="energy-bar-bg">
+                <div class="energy-bar-fill" id="energy-fill"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="footer">داگرە بۆ کۆکردنەوەی سکە</div>
+    <!-- TAB 2: BOOSTERS -->
+    <div id="tab-boost" class="tab-content">
+        <h3 style="margin-bottom: 15px;">بەرزکردنەوەی ئاست (Boosters)</h3>
+        <div class="card-list">
+            <div class="card">
+                <div>
+                    <div><strong>Multi-Tap</strong></div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">زیادکردنی خاڵ بۆ هەر کلیکێک</div>
+                </div>
+                <button onclick="buyMultiTap()">کڕین (<span id="cost-multitap">100</span>)</button>
+            </div>
+            <div class="card">
+                <div>
+                    <div><strong>Auto-Bot</strong></div>
+                    <div style="font-size: 0.8rem; color: #94a3b8;">کۆکردنەوەی خۆکارانە (+1/چرکە)</div>
+                </div>
+                <button onclick="buyAutoBot()">کڕین (<span id="cost-autobot">500</span>)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: FRIENDS / REF -->
+    <div id="tab-ref" class="tab-content">
+        <h3 style="margin-bottom: 10px;">بانگهێشتکردنی هاوڕێیان</h3>
+        <p style="text-align: center; color: #94a3b8; margin-bottom: 20px;">بۆ هەر هاوڕێیەک ٥,٠٠٠ سکە وەربگرە!</p>
+        <button style="padding: 12px 24px; background: var(--accent-color); border: none; border-radius: 8px; font-weight: bold;" onclick="shareRef()">کۆپیکردنی لینکی دەعوەت 🔗</button>
+    </div>
+
+    <!-- TAB 4: WALLET -->
+    <div id="tab-wallet" class="tab-content">
+        <h3 style="margin-bottom: 15px;">کیفەی دیجیتاڵی (TON Wallet)</h3>
+        <p style="text-align: center; color: #94a3b8; margin-bottom: 20px;">کیفەکەت ببەستەوە بۆ راکێشانی دراوەکان لە داهاتوودا.</p>
+        <button style="padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold;" onclick="alert('سێرڤەری کیفە لە بەشی داهاتوودا دەبەسترێتەوە!')">Connect TON Wallet 💎</button>
+    </div>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="nav-item active" onclick="switchTab('tab-game', this)">🎮 یاری</div>
+        <div class="nav-item" onclick="switchTab('tab-boost', this)">🚀 بووست</div>
+        <div class="nav-item" onclick="switchTab('tab-ref', this)">👥 هاوڕێیان</div>
+        <div class="nav-item" onclick="switchTab('tab-wallet', this)">👛 کیفە</div>
+    </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        const tg = window.Telegram?.WebApp;
+        if(tg) tg.expand();
 
+        // Game State
+        let score = parseInt(localStorage.getItem('score')) || 0;
+        let energy = parseInt(localStorage.getItem('energy')) || 1000;
+        let maxEnergy = 1000;
+        let tapValue = parseInt(localStorage.getItem('tapValue')) || 1;
+        let autoBotRate = parseInt(localStorage.getItem('autoBotRate')) || 0;
+
+        let costMultiTap = parseInt(localStorage.getItem('costMultiTap')) || 100;
+        let costAutoBot = parseInt(localStorage.getItem('costAutoBot')) || 500;
+
+        // UI Elements
         const scoreEl = document.getElementById('score');
-        const coinBtn = document.getElementById('coinBtn');
-        const userNameEl = document.getElementById('userName');
+        const energyTextEl = document.getElementById('energy-text');
+        const energyFillEl = document.getElementById('energy-fill');
+        const coinBtn = document.getElementById('coin');
 
-        // خەڵات و خاڵە پاشەکەوتکراوەکان دەهێنێتەوە
-        let score = parseInt(localStorage.getItem('userScore') || '0');
-        scoreEl.innerText = score.toLocaleString();
-
-        // ڕاکێشانی ناوی بەکارهێنەر لە تێلیگرامەوە
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            userNameEl.innerText = `سڵاو، ${tg.initDataUnsafe.user.first_name}!`;
+        function updateUI() {
+            scoreEl.innerText = score.toLocaleString();
+            energyTextEl.innerText = `${energy} / ${maxEnergy}`;
+            energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
+            document.getElementById('cost-multitap').innerText = costMultiTap;
+            document.getElementById('cost-autobot').innerText = costAutoBot;
+            
+            localStorage.setItem('score', score);
+            localStorage.setItem('energy', energy);
+            localStorage.setItem('tapValue', tapValue);
+            localStorage.setItem('autoBotRate', autoBotRate);
+            localStorage.setItem('costMultiTap', costMultiTap);
+            localStorage.setItem('costAutoBot', costAutoBot);
         }
 
+        // Tap Logic
         coinBtn.addEventListener('click', (e) => {
-            score += 1;
-            scoreEl.innerText = score.toLocaleString();
-            localStorage.setItem('userScore', score);
+            if (energy >= tapValue) {
+                score += tapValue;
+                energy -= tapValue;
 
-            // لەرەلەری مۆبایل لە کاتی لێدان
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
+                if(tg?.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('medium');
+                }
+
+                // Create floating animation (+1)
+                const rect = coinBtn.getBoundingClientRect();
+                const floatEl = document.createElement('div');
+                floatEl.className = 'floating-text';
+                floatEl.innerText = `+${tapValue}`;
+                floatEl.style.left = `${e.clientX - rect.left}px`;
+                floatEl.style.top = `${e.clientY - rect.top}px`;
+                coinBtn.appendChild(floatEl);
+
+                setTimeout(() => floatEl.remove(), 800);
+                updateUI();
             }
-
-            createFloatingText(e);
         });
 
-        function createFloatingText(e) {
-            const rect = coinBtn.getBoundingClientRect();
-            const x = e.clientX || (rect.left + rect.width / 2);
-            const y = e.clientY || (rect.top + rect.height / 2);
+        // Energy Auto-Regen & Auto-Bot Loop
+        setInterval(() => {
+            let changed = false;
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 1);
+                changed = true;
+            }
+            if (autoBotRate > 0) {
+                score += autoBotRate;
+                changed = true;
+            }
+            if(changed) updateUI();
+        }, 1000);
 
-            const el = document.createElement('div');
-            el.className = 'floating-text';
-            el.innerText = '+1';
-            el.style.left = `${x - 20}px`;
-            el.style.top = `${y - 40}px`;
-
-            document.body.appendChild(el);
-            setTimeout(() => el.remove(), 700);
+        // Boosters Logic
+        function buyMultiTap() {
+            if (score >= costMultiTap) {
+                score -= costMultiTap;
+                tapValue += 1;
+                costMultiTap *= 2;
+                updateUI();
+            } else {
+                alert('سکەی پێویستت نییە!');
+            }
         }
+
+        function buyAutoBot() {
+            if (score >= costAutoBot) {
+                score -= costAutoBot;
+                autoBotRate += 1;
+                costAutoBot *= 2;
+                updateUI();
+            } else {
+                alert('سکەی پێویستت نییە!');
+            }
+        }
+
+        // Navigation Tabs
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
+        }
+
+        function shareRef() {
+            const user = tg?.initDataUnsafe?.user?.id || 'demo';
+            const link = `https://t.me/Dyakotbot/Play?startapp=${user}`;
+            navigator.clipboard.writeText(link);
+            alert('لینکی دەعوەت کۆپی کرا!');
+        }
+
+        updateUI();
     </script>
 </body>
 </html>
