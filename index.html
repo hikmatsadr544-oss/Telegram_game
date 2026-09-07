@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Telegram Mini App</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            padding: 24px 16px;
+            overflow: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .username {
+            font-size: 18px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .score-box {
+            font-size: 48px;
+            font-weight: 800;
+            color: #fbbf24;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .coin-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+        }
+
+        .coin-btn {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fbbf24 0%, #d97706 100%);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.35);
+            border: 6px solid rgba(255, 255, 255, 0.15);
+            font-size: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.08s ease;
+        }
+
+        .coin-btn:active {
+            transform: scale(0.92);
+        }
+
+        .floating-text {
+            position: absolute;
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            pointer-events: none;
+            animation: floatUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-90px) scale(1.2); }
+        }
+
+        .footer {
+            color: #64748b;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="username" id="userName">سڵاو بەکارهێنەر!</div>
+        <div class="score-box">
+            🪙 <span id="score">0</span>
+        </div>
+    </div>
+
+    <div class="coin-area">
+        <div class="coin-btn" id="coinBtn">⚡</div>
+    </div>
+
+    <div class="footer">داگرە بۆ کۆکردنەوەی سکە</div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        const scoreEl = document.getElementById('score');
+        const coinBtn = document.getElementById('coinBtn');
+        const userNameEl = document.getElementById('userName');
+
+        // خەڵات و خاڵە پاشەکەوتکراوەکان دەهێنێتەوە
+        let score = parseInt(localStorage.getItem('userScore') || '0');
+        scoreEl.innerText = score.toLocaleString();
+
+        // ڕاکێشانی ناوی بەکارهێنەر لە تێلیگرامەوە
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userNameEl.innerText = `سڵاو، ${tg.initDataUnsafe.user.first_name}!`;
+        }
+
+        coinBtn.addEventListener('click', (e) => {
+            score += 1;
+            scoreEl.innerText = score.toLocaleString();
+            localStorage.setItem('userScore', score);
+
+            // لەرەلەری مۆبایل لە کاتی لێدان
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            createFloatingText(e);
+        });
+
+        function createFloatingText(e) {
+            const rect = coinBtn.getBoundingClientRect();
+            const x = e.clientX || (rect.left + rect.width / 2);
+            const y = e.clientY || (rect.top + rect.height / 2);
+
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = '+1';
+            el.style.left = `${x - 20}px`;
+            el.style.top = `${y - 40}px`;
+
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 700);
+        }
+    </script>
+</body>
+</html>
