@@ -1,236 +1,102 @@
 <!DOCTYPE html>
-<html lang="ckb" dir="rtl">
+<html lang="kmr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Tap to Earn Pro</title>
+    <title>Imperial Citadel</title>
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #f59e0b;
-            --text-color: #ffffff;
-            --success-color: #10b981;
-        }
-
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            margin: 0;
-            padding: 0;
-            font-family: system-ui, -apple-system, sans-serif;
+            --bg-color: #12131C;
+            --card-bg: #1E202E;
+            --accent-gold: #FFD700;
+            --accent-orange: #FF8C00;
+            --text-color: #FFFFFF;
         }
 
         body {
+            margin: 0;
+            padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            justify-content: space-between;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .header {
-            padding: 15px;
             text-align: center;
+            margin-top: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
             background: var(--card-bg);
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            text-align: center;
         }
 
-        .score-container {
-            font-size: 2.2rem;
+        .stat-title {
+            font-size: 12px;
+            color: #AAA;
+        }
+
+        .stat-value {
+            font-size: 20px;
             font-weight: bold;
-            color: var(--accent-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            color: var(--accent-gold);
         }
 
-        .tab-content {
-            display: none;
-            flex: 1;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .tab-content.active {
-            display: flex;
-        }
-
-        .coin-btn {
-            width: 190px;
-            height: 190px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #fbbf24 0%, #d97706 100%);
-            border: 8px solid #fef08a;
-            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            cursor: pointer;
-            transition: transform 0.05s ease;
+        /* Castle Click Area */
+        .castle-area {
             position: relative;
+            margin: 20px 0;
+            cursor: pointer;
         }
 
-        .coin-btn:active {
-            transform: scale(0.95);
-        }
-
-        .tap-level-badge {
-            font-size: 0.85rem;
-            background: rgba(0,0,0,0.4);
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-top: 5px;
-            color: #fef08a;
-        }
-
-        .energy-container {
-            width: 100%;
-            max-width: 300px;
-            margin-top: 25px;
-        }
-
-        .energy-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-
-        .energy-bar-bg {
-            width: 100%;
-            height: 12px;
-            background: #334155;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .energy-bar-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-            transition: width 0.2s ease;
-        }
-
-        /* Profile Styles */
-        .profile-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px;
-            width: 100%;
-            max-width: 350px;
-            text-align: center;
-            border: 1px solid #334155;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            margin-bottom: 15px;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
+        .castle-btn {
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            background: var(--accent-color);
-            margin: 0 auto 12px;
+            background: radial-gradient(circle, #2C2D42 0%, #12131C 100%);
+            border: 4px solid var(--accent-gold);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
-            border: 3px solid #fef08a;
-            overflow: hidden;
-        }
-
-        .profile-stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            width: 100%;
-            max-width: 350px;
-        }
-
-        .stat-box {
-            background: var(--card-bg);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid #334155;
-            text-align: center;
-        }
-
-        .stat-box div {
-            font-size: 0.8rem;
-            color: #94a3b8;
-        }
-
-        .stat-box strong {
-            font-size: 1.1rem;
-            color: var(--accent-color);
-        }
-
-        .card-list {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            border: 1px solid #334155;
+            font-size: 80px;
+            transition: transform 0.1s ease;
         }
 
-        .card button {
-            background: var(--accent-color);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: bold;
-            color: #000;
-            cursor: pointer;
+        .castle-btn:active {
+            transform: scale(0.92);
         }
 
-        .navbar {
-            display: flex;
-            background: var(--card-bg);
-            border-top: 1px solid #334155;
-            padding: 8px 0;
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding: 8px 0;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            cursor: pointer;
-        }
-
-        .nav-item.active {
-            color: var(--accent-color);
-            font-weight: bold;
-        }
-
-        .floating-text {
+        /* Floating Click Numbers */
+        .click-number {
             position: absolute;
-            font-size: 1.8rem;
+            color: var(--accent-gold);
             font-weight: bold;
-            color: #ffffff;
+            font-size: 24px;
             pointer-events: none;
             animation: floatUp 0.8s ease-out forwards;
         }
@@ -239,277 +105,175 @@
             0% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(-50px); }
         }
+
+        /* Upgrades Section */
+        .upgrades {
+            width: 90%;
+            max-width: 400px;
+            margin-top: 10px;
+        }
+
+        .upgrade-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2A2C3D;
+        }
+
+        .upgrade-info h4 {
+            margin: 0 0 5px 0;
+            font-size: 15px;
+        }
+
+        .upgrade-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .buy-btn {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
+            border: none;
+            color: #000;
+            font-weight: bold;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .buy-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div style="font-size: 0.85rem; color: #94a3b8;">باڵانسی گشتی</div>
-        <div class="score-container">
-            🪙 <span id="score">0</span>
+        <h1 id="user-name">🏰 Imperial Citadel</h1>
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-title">زێڕ (Gold)</div>
+            <div class="stat-value" id="gold-count">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">داهات / چرکە</div>
+            <div class="stat-value" id="gps-count">0</div>
         </div>
     </div>
 
-    <!-- TAB 1: TAP GAME -->
-    <div id="tab-game" class="tab-content active">
-        <div class="coin-btn" id="coin">
-            🪙
-            <div class="tap-level-badge" id="tap-level-name">تۆپی ١</div>
-        </div>
-
-        <div class="energy-container">
-            <div class="energy-info">
-                <span>⚡ وزە</span>
-                <span id="energy-text">1000 / 1000</span>
-            </div>
-            <div class="energy-bar-bg">
-                <div class="energy-bar-fill" id="energy-fill"></div>
-            </div>
-        </div>
+    <div class="castle-area" id="castle">
+        <div class="castle-btn">🏰</div>
     </div>
 
-    <!-- TAB 2: BOOSTERS -->
-    <div id="tab-boost" class="tab-content">
-        <h3 style="margin-bottom: 15px;">ئاستەکانی کلیک (Tap Tiers)</h3>
-        <div class="card-list">
-            <div class="card">
-                <div>
-                    <div><strong id="tier-title">تۆپی ١ (Standard Tap)</strong></div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;" id="tier-desc">هێز: +1 سکە بۆ هەر کلیکێک</div>
-                </div>
-                <button onclick="upgradeTapTier()" id="tier-btn">بەرزکردنەوە (<span id="cost-tier">200</span>)</button>
+    <div class="upgrades">
+        <h3>بەرزکردنەوەی ئاست (Upgrades)</h3>
+        
+        <div class="upgrade-card">
+            <div class="upgrade-info">
+                <h4>وەستای مەعدەنچی ⛏️</h4>
+                <p>داهات: +1 زێڕ/چرکە</p>
             </div>
-            <div class="card">
-                <div>
-                    <div><strong>روبۆتی خۆکار (Auto-Bot)</strong></div>
-                    <div style="font-size: 0.8rem; color: #94a3b8;">کۆکردنەوەی خۆکارانە</div>
-                </div>
-                <button onclick="buyAutoBot()">کڕین (<span id="cost-autobot">500</span>)</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 3: USER PROFILE (پڕۆفایلی بەکارهێنەر) -->
-    <div id="tab-profile" class="tab-content">
-        <div class="profile-card">
-            <div class="profile-avatar" id="prof-avatar">👤</div>
-            <h2 id="prof-name">یاریزان</h2>
-            <p id="prof-username" style="color: #94a3b8; font-size: 0.85rem; margin-top: 3px;">@username</p>
-            <div style="margin-top: 10px; font-size: 0.8rem; color: #64748b;">
-                Telegram ID: <span id="prof-id" style="color: #cbd5e1; font-weight: bold;">--</span>
-            </div>
+            <button class="buy-btn" id="buy-miner" onclick="buyMiner()">کڕین (50 زێڕ)</button>
         </div>
 
-        <div class="profile-stats-grid">
-            <div class="stat-box">
-                <div>ئاستی ئێستا</div>
-                <strong id="prof-tier">تۆپی ١</strong>
+        <div class="upgrade-card">
+            <div class="upgrade-info">
+                <h4>سوپاسالار ⚔️</h4>
+                <p>داهات: +5 زێڕ/چرکە</p>
             </div>
-            <div class="stat-box">
-                <div>تێکڕای سکە</div>
-                <strong id="prof-score">0</strong>
-            </div>
-            <div class="stat-box" style="grid-column: span 2;">
-                <div>دۆخی کیفە (Wallet)</div>
-                <strong id="prof-wallet" style="font-size: 0.9rem;">نەبەستراوەتەوە</strong>
-            </div>
+            <button class="buy-btn" id="buy-knight" onclick="buyKnight()">کڕین (200 زێڕ)</button>
         </div>
-    </div>
-
-    <!-- TAB 4: FRIENDS -->
-    <div id="tab-ref" class="tab-content">
-        <h3 style="margin-bottom: 10px;">بانگهێشتکردنی هاوڕێیان</h3>
-        <p style="text-align: center; color: #94a3b8; margin-bottom: 20px;">بۆ هەر هاوڕێیەک ٥,٠٠٠ سکە وەربگرە!</p>
-        <button style="padding: 12px 24px; background: var(--accent-color); border: none; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="shareRef()">کۆپیکردنی لینکی دەعوەت 🔗</button>
-    </div>
-
-    <!-- TAB 5: WALLET -->
-    <div id="tab-wallet" class="tab-content">
-        <div class="profile-card">
-            <h3 style="margin-bottom: 15px;">بەستنەوەی کیفەی TON</h3>
-            <p id="wallet-status-text" style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">هیچ کیفەیەک نەبەستراوەتەوە.</p>
-            <button id="wallet-action-btn" style="padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer;" onclick="toggleWallet()">بەستنەوەی کیفە (Connect)</button>
-        </div>
-    </div>
-
-    <!-- NAVBAR (کۆنترۆڵی خوارەوە) -->
-    <div class="navbar">
-        <div class="nav-item active" onclick="switchTab('tab-game', this)">🎮 یاری</div>
-        <div class="nav-item" onclick="switchTab('tab-boost', this)">🚀 ئاستەکان</div>
-        <div class="nav-item" onclick="switchTab('tab-profile', this)">👤 پڕۆفایل</div>
-        <div class="nav-item" onclick="switchTab('tab-ref', this)">👥 هاوڕێیان</div>
-        <div class="nav-item" onclick="switchTab('tab-wallet', this)">👛 کیفە</div>
     </div>
 
     <script>
-        const tg = window.Telegram?.WebApp;
-        if(tg) tg.expand();
+        // Telegram WebApp Initialization
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Fullscreen mode in Telegram
 
-        let score = parseInt(localStorage.getItem('score')) || 0;
-        let energy = parseInt(localStorage.getItem('energy')) || 1000;
-        let maxEnergy = 1000;
-        
-        let tapTier = parseInt(localStorage.getItem('tapTier')) || 1;
-        let tapValue = tapTier;
-        let costTier = parseInt(localStorage.getItem('costTier')) || 200;
-
-        let autoBotRate = parseInt(localStorage.getItem('autoBotRate')) || 0;
-        let costAutoBot = parseInt(localStorage.getItem('costAutoBot')) || 500;
-        let walletAddress = localStorage.getItem('walletAddress') || null;
-
-        const scoreEl = document.getElementById('score');
-        const energyTextEl = document.getElementById('energy-text');
-        const energyFillEl = document.getElementById('energy-fill');
-        const coinBtn = document.getElementById('coin');
-
-        // Fetch Telegram User Data
-        function loadUserProfile() {
-            const user = tg?.initDataUnsafe?.user;
-            if (user) {
-                const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-                document.getElementById('prof-name').innerText = fullName || 'یاریزانی تێلیگرام';
-                document.getElementById('prof-username').innerText = user.username ? `@${user.username}` : '@no_username';
-                document.getElementById('prof-id').innerText = user.id;
-
-                if (user.photo_url) {
-                    document.getElementById('prof-avatar').innerHTML = `<img src="${user.photo_url}" style="width:100%;height:100%;object-fit:cover;">`;
-                }
-            }
+        // Load User Info if available
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('user-name').innerText = "🏰 " + tg.initDataUnsafe.user.first_name + "'s Citadel";
         }
+
+        // Game State
+        let gold = parseInt(localStorage.getItem('gold')) || 0;
+        let goldPerSecond = parseInt(localStorage.getItem('gps')) || 0;
+        let minerCost = parseInt(localStorage.getItem('minerCost')) || 50;
+        let knightCost = parseInt(localStorage.getItem('knightCost')) || 200;
+
+        const goldEl = document.getElementById('gold-count');
+        const gpsEl = document.getElementById('gps-count');
+        const minerBtn = document.getElementById('buy-miner');
+        const knightBtn = document.getElementById('buy-knight');
+        const castle = document.getElementById('castle');
 
         function updateUI() {
-            scoreEl.innerText = score.toLocaleString();
-            energyTextEl.innerText = `${energy} / ${maxEnergy}`;
-            energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
-            
-            document.getElementById('tap-level-name').innerText = `تۆپی ${tapTier}`;
-            document.getElementById('prof-tier').innerText = `تۆپی ${tapTier}`;
-            document.getElementById('prof-score').innerText = score.toLocaleString();
+            goldEl.innerText = Math.floor(gold);
+            gpsEl.innerText = goldPerSecond;
+            minerBtn.innerText = `کڕین (${minerCost} زێڕ)`;
+            knightBtn.innerText = `کڕین (${knightCost} زێڕ)`;
 
-            if(tapTier === 1) {
-                document.getElementById('tier-title').innerText = 'تۆپی ١ (Standard Tap)';
-                document.getElementById('tier-desc').innerText = 'هێز: +1 سکە بۆ هەر کلیکێک';
-            } else {
-                document.getElementById('tier-title').innerText = `تۆپی ${tapTier} (Mega Tap)`;
-                document.getElementById('tier-desc').innerText = `هێز: +${tapTier} سکە بۆ هەر کلیکێک`;
-            }
-            document.getElementById('cost-tier').innerText = costTier;
-            document.getElementById('cost-autobot').innerText = costAutoBot;
+            minerBtn.disabled = gold < minerCost;
+            knightBtn.disabled = gold < knightCost;
 
-            // Wallet UI Sync
-            if (walletAddress) {
-                const shortWallet = `${walletAddress.substring(0,6)}...${walletAddress.substring(walletAddress.length-4)}`;
-                document.getElementById('wallet-status-text').innerText = `بەستراوەتەوە:\n${shortWallet}`;
-                document.getElementById('prof-wallet').innerText = shortWallet;
-                document.getElementById('prof-wallet').style.color = '#10b981';
-                document.getElementById('wallet-action-btn').innerText = 'پچڕاندنی پەیوەندی (Disconnect)';
-                document.getElementById('wallet-action-btn').style.background = '#dc2626';
-            } else {
-                document.getElementById('wallet-status-text').innerText = 'هیچ کیفەیەک نەبەستراوەتەوە.';
-                document.getElementById('prof-wallet').innerText = 'نەبەستراوەتەوە';
-                document.getElementById('prof-wallet').style.color = '#f59e0b';
-                document.getElementById('wallet-action-btn').innerText = 'بەستنەوەی کیفە (Connect)';
-                document.getElementById('wallet-action-btn').style.background = '#2563eb';
-            }
-            
-            localStorage.setItem('score', score);
-            localStorage.setItem('energy', energy);
-            localStorage.setItem('tapTier', tapTier);
-            localStorage.setItem('autoBotRate', autoBotRate);
-            localStorage.setItem('costTier', costTier);
-            localStorage.setItem('costAutoBot', costAutoBot);
+            // Save state
+            localStorage.setItem('gold', gold);
+            localStorage.setItem('gps', goldPerSecond);
+            localStorage.setItem('minerCost', minerCost);
+            localStorage.setItem('knightCost', knightCost);
         }
 
-        coinBtn.addEventListener('click', (e) => {
-            if (energy >= tapValue) {
-                score += tapValue;
-                energy -= tapValue;
+        // Click Castle Effect & Earnings
+        castle.addEventListener('click', (e) => {
+            gold += 1;
+            
+            // Spawn Floating Number (+1)
+            const num = document.createElement('div');
+            num.className = 'click-number';
+            num.innerText = '+1';
+            num.style.left = `${e.clientX - castle.offsetLeft - 10}px`;
+            num.style.top = `${e.clientY - castle.offsetTop - 20}px`;
+            castle.appendChild(num);
 
-                if(tg?.HapticFeedback) {
-                    tg.HapticFeedback.impactOccurred('medium');
-                }
-
-                const rect = coinBtn.getBoundingClientRect();
-                const floatEl = document.createElement('div');
-                floatEl.className = 'floating-text';
-                floatEl.innerText = `+${tapValue}`;
-                floatEl.style.left = `${e.clientX - rect.left}px`;
-                floatEl.style.top = `${e.clientY - rect.top}px`;
-                coinBtn.appendChild(floatEl);
-
-                setTimeout(() => floatEl.remove(), 800);
-                updateUI();
-            }
+            setTimeout(() => num.remove(), 800);
+            updateUI();
         });
 
+        // Passive Income (Per Second)
         setInterval(() => {
-            let changed = false;
-            if (energy < maxEnergy) {
-                energy = Math.min(maxEnergy, energy + 1);
-                changed = true;
+            if (goldPerSecond > 0) {
+                gold += goldPerSecond;
+                updateUI();
             }
-            if (autoBotRate > 0) {
-                score += autoBotRate;
-                changed = true;
-            }
-            if(changed) updateUI();
         }, 1000);
 
-        function upgradeTapTier() {
-            if (score >= costTier) {
-                score -= costTier;
-                tapTier += 1;
-                tapValue = tapTier;
-                costTier = Math.floor(costTier * 2.5);
-                updateUI();
-            } else {
-                alert('سکەی پێویستت نییە!');
-            }
-        }
-
-        function buyAutoBot() {
-            if (score >= costAutoBot) {
-                score -= costAutoBot;
-                autoBotRate += 1;
-                costAutoBot *= 2;
-                updateUI();
-            } else {
-                alert('سکەی پێویستت نییە!');
-            }
-        }
-
-        function toggleWallet() {
-            if (walletAddress) {
-                if(confirm('دڵنیای لە پچڕاندنی پەیوەندی کیفەکەت؟')) {
-                    walletAddress = null;
-                    localStorage.removeItem('walletAddress');
-                    updateUI();
-                }
-            } else {
-                const mockAddresses = ["EQD41-W56...abc78", "UQCt89-K22...xyz99", "EQA11-B34...ton88"];
-                walletAddress = mockAddresses[Math.floor(Math.random() * mockAddresses.length)];
-                localStorage.setItem('walletAddress', walletAddress);
-                if(tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                alert('کیفەی TON بە سەرکەوتوویی بەستراوەوە! 💎');
+        // Buy Functions
+        function buyMiner() {
+            if (gold >= minerCost) {
+                gold -= minerCost;
+                goldPerSecond += 1;
+                minerCost = Math.floor(minerCost * 1.5);
                 updateUI();
             }
         }
 
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            el.classList.add('active');
+        function buyKnight() {
+            if (gold >= knightCost) {
+                gold -= knightCost;
+                goldPerSecond += 5;
+                knightCost = Math.floor(knightCost * 1.6);
+                updateUI();
+            }
         }
 
-        function shareRef() {
-            const user = tg?.initDataUnsafe?.user?.id || 'demo';
-            const link = `https://t.me/Dyakotbot/Play?startapp=${user}`;
-            navigator.clipboard.writeText(link);
-            alert('لینکی دەعوەت کۆپی کرا!');
-        }
-
-        loadUserProfile();
         updateUI();
     </script>
 </body>
