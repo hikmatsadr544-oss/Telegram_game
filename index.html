@@ -4,15 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Imperial Citadel</title>
-    <!-- Telegram Web App SDK -->
+    <!-- Telegram Mini App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #12131C;
-            --card-bg: #1E202E;
-            --accent-gold: #FFD700;
-            --accent-orange: #FF8C00;
-            --text-color: #FFFFFF;
+            --bg-color: #0d0f17;
+            --card-bg: #181b29;
+            --card-border: #2a2e45;
+            --accent-gold: #ffc83b;
+            --accent-orange: #ff8008;
+            --text-color: #ffffff;
+            --text-muted: #8e95b0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -20,258 +27,521 @@
             padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        .header {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: var(--accent-gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-
-        .stats-container {
+        /* Top Bar */
+        .top-bar {
+            padding: 15px 20px;
             display: flex;
-            gap: 15px;
-            margin: 20px 0;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(24, 27, 41, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--card-border);
         }
 
-        .stat-card {
-            background: var(--card-bg);
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            text-align: center;
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .stat-title {
-            font-size: 12px;
-            color: #AAA;
-        }
-
-        .stat-value {
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 20px;
             font-weight: bold;
-            color: var(--accent-gold);
         }
 
-        /* Castle Click Area */
-        .castle-area {
+        .user-info h3 {
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .user-info span {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Main Scrollable Content */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 90px;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            max-width: 420px;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Gold Stats */
+        .gold-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0 5px 0;
+        }
+
+        .gold-display img, .gold-display span.icon {
+            font-size: 36px;
+        }
+
+        .gold-amount {
+            font-size: 38px;
+            font-weight: 800;
+            color: var(--accent-gold);
+            text-shadow: 0 0 20px rgba(255, 200, 59, 0.3);
+        }
+
+        .income-rate {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+        }
+
+        /* Castle Clicker */
+        .castle-wrapper {
             position: relative;
             margin: 20px 0;
             cursor: pointer;
         }
 
         .castle-btn {
-            width: 180px;
-            height: 180px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
-            background: radial-gradient(circle, #2C2D42 0%, #12131C 100%);
-            border: 4px solid var(--accent-gold);
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+            background: radial-gradient(circle, #252a3f 0%, #121522 100%);
+            border: 6px solid var(--accent-gold);
+            box-shadow: 0 0 35px rgba(255, 200, 59, 0.25);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 80px;
-            transition: transform 0.1s ease;
+            font-size: 100px;
+            transition: transform 0.08s ease;
         }
 
         .castle-btn:active {
-            transform: scale(0.92);
+            transform: scale(0.93);
         }
 
-        /* Floating Click Numbers */
-        .click-number {
+        /* Floating Click Effect */
+        .tap-effect {
             position: absolute;
             color: var(--accent-gold);
+            font-size: 28px;
             font-weight: bold;
-            font-size: 24px;
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
+            animation: floatAndFade 0.8s ease-out forwards;
         }
 
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
+        @keyframes floatAndFade {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
         }
 
-        /* Upgrades Section */
-        .upgrades {
-            width: 90%;
-            max-width: 400px;
-            margin-top: 10px;
+        /* Energy Bar */
+        .energy-container {
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
         }
 
-        .upgrade-card {
+        .energy-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 12px;
+            background: #1e2235;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-gold));
+            transition: width 0.2s ease;
+        }
+
+        /* Upgrades & Cards */
+        .card {
             background: var(--card-bg);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 10px;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid #2A2C3D;
         }
 
-        .upgrade-info h4 {
-            margin: 0 0 5px 0;
+        .card-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            font-size: 32px;
+            background: #23273b;
+            padding: 8px;
+            border-radius: 10px;
+        }
+
+        .card-details h4 {
+            margin: 0 0 4px 0;
             font-size: 15px;
         }
 
-        .upgrade-info p {
+        .card-details p {
             margin: 0;
             font-size: 12px;
-            color: #888;
+            color: var(--text-muted);
         }
 
-        .buy-btn {
+        .btn-buy {
             background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
             border: none;
             color: #000;
-            font-weight: bold;
-            padding: 8px 15px;
-            border-radius: 8px;
+            font-weight: 700;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
             cursor: pointer;
         }
 
-        .buy-btn:disabled {
-            background: #444;
-            color: #888;
+        .btn-buy:disabled {
+            background: #2d3248;
+            color: #636b8e;
             cursor: not-allowed;
+        }
+
+        /* Bottom Nav Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(20, 23, 36, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+            width: 25%;
+        }
+
+        .nav-item.active {
+            color: var(--accent-gold);
+        }
+
+        .nav-item span.icon {
+            font-size: 22px;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1 id="user-name">🏰 Imperial Citadel</h1>
-    </div>
-
-    <div class="stats-container">
-        <div class="stat-card">
-            <div class="stat-title">زێڕ (Gold)</div>
-            <div class="stat-value" id="gold-count">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-title">داهات / چرکە</div>
-            <div class="stat-value" id="gps-count">0</div>
-        </div>
-    </div>
-
-    <div class="castle-area" id="castle">
-        <div class="castle-btn">🏰</div>
-    </div>
-
-    <div class="upgrades">
-        <h3>بەرزکردنەوەی ئاست (Upgrades)</h3>
-        
-        <div class="upgrade-card">
-            <div class="upgrade-info">
-                <h4>وەستای مەعدەنچی ⛏️</h4>
-                <p>داهات: +1 زێڕ/چرکە</p>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">🏰</div>
+            <div class="user-info">
+                <h3 id="user-name">یاریزان</h3>
+                <span>ئاستی ۱: پاشای نوێ</span>
             </div>
-            <button class="buy-btn" id="buy-miner" onclick="buyMiner()">کڕین (50 زێڕ)</button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content">
+
+        <!-- TAB 1: Main Clicker -->
+        <div id="tab-main" class="tab-content active">
+            <div class="gold-display">
+                <span class="icon">🪙</span>
+                <span class="gold-amount" id="gold-val">0</span>
+            </div>
+            <div class="income-rate">داهات: +<span id="gps-val">0</span> زێڕ/چرکە</div>
+
+            <div class="castle-wrapper" id="castle-click">
+                <div class="castle-btn">🏰</div>
+            </div>
+
+            <div class="energy-container">
+                <div class="energy-header">
+                    <span>⚡ وزە</span>
+                    <span><b id="energy-val">1000</b> / <span id="max-energy-val">1000</span></span>
+                </div>
+                <div class="energy-bar-bg">
+                    <div class="energy-bar-fill" id="energy-fill"></div>
+                </div>
+            </div>
         </div>
 
-        <div class="upgrade-card">
-            <div class="upgrade-info">
-                <h4>سوپاسالار ⚔️</h4>
-                <p>داهات: +5 زێڕ/چرکە</p>
+        <!-- TAB 2: Upgrades -->
+        <div id="tab-upgrades" class="tab-content">
+            <h2 style="width: 100%; text-align: right; font-size: 18px;">پەرەپێدانی ئیمپراتۆریەت</h2>
+            
+            <div class="card">
+                <div class="card-info">
+                    <div class="card-icon">⛏️</div>
+                    <div class="card-details">
+                        <h4>کانگای زێڕ</h4>
+                        <p>+1 زێڕ/چرکە</p>
+                    </div>
+                </div>
+                <button class="btn-buy" id="buy-mine" onclick="buyUpgrade('mine')">کڕین</button>
             </div>
-            <button class="buy-btn" id="buy-knight" onclick="buyKnight()">کڕین (200 زێڕ)</button>
+
+            <div class="card">
+                <div class="card-info">
+                    <div class="card-icon">⚔️</div>
+                    <div class="card-details">
+                        <h4>سوپاسالار</h4>
+                        <p>+5 زێڕ/چرکە</p>
+                    </div>
+                </div>
+                <button class="btn-buy" id="buy-knight" onclick="buyUpgrade('knight')">کڕین</button>
+            </div>
+
+            <div class="card">
+                <div class="card-info">
+                    <div class="card-icon">🧙‍♂️</div>
+                    <div class="card-details">
+                        <h4>قەڵای جادووگەر</h4>
+                        <p>+20 زێڕ/چرکە</p>
+                    </div>
+                </div>
+                <button class="btn-buy" id="buy-wizard" onclick="buyUpgrade('wizard')">کڕین</button>
+            </div>
+        </div>
+
+        <!-- TAB 3: Invite Friends -->
+        <div id="tab-invite" class="tab-content">
+            <h2>👥 بانگهێشتکردنی هاوڕێیان</h2>
+            <p style="text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">
+                بۆ هەر هاوڕێیەک جۆین بێت، +1,000 زێڕی دیاری وەربگرە!
+            </p>
+            <button class="btn-buy" style="width: 100%; padding: 15px; font-size: 16px;" onclick="shareInvite()">
+                ناردنی لینکی بانگهێشت 🚀
+            </button>
+        </div>
+
+        <!-- TAB 4: Leaderboard -->
+        <div id="tab-leaderboard" class="tab-content">
+            <h2>🏆 ڕیزبەندی یاریزانان</h2>
+            <div class="card">
+                <div class="card-info">
+                    <div class="card-icon">🥇</div>
+                    <div class="card-details">
+                        <h4>ئاراس ئاری</h4>
+                        <p>1,250,000 زێڕ</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-info">
+                    <div class="card-icon">🥈</div>
+                    <div class="card-details">
+                        <h4>کاروان</h4>
+                        <p>850,000 زێڕ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchTab('tab-main', this)">
+            <span class="icon">🏰</span>
+            <span>قەڵا</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-upgrades', this)">
+            <span class="icon">⚡</span>
+            <span>بەرزکردنەوە</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-invite', this)">
+            <span class="icon">👥</span>
+            <span>هاوڕێیان</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-leaderboard', this)">
+            <span class="icon">🏆</span>
+            <span>ڕیزبەندی</span>
         </div>
     </div>
 
     <script>
-        // Telegram WebApp Initialization
+        // Init Telegram WebApp
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Fullscreen mode in Telegram
+        tg.ready();
+        tg.expand();
 
-        // Load User Info if available
+        // Load User Info
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('user-name').innerText = "🏰 " + tg.initDataUnsafe.user.first_name + "'s Citadel";
+            const u = tg.initDataUnsafe.user;
+            document.getElementById('user-name').innerText = u.first_name || "یاریزان";
+            if (u.first_name) {
+                document.getElementById('user-avatar').innerText = u.first_name.charAt(0).toUpperCase();
+            }
         }
 
         // Game State
-        let gold = parseInt(localStorage.getItem('gold')) || 0;
-        let goldPerSecond = parseInt(localStorage.getItem('gps')) || 0;
-        let minerCost = parseInt(localStorage.getItem('minerCost')) || 50;
-        let knightCost = parseInt(localStorage.getItem('knightCost')) || 200;
+        let state = {
+            gold: parseFloat(localStorage.getItem('ic_gold')) || 0,
+            energy: parseInt(localStorage.getItem('ic_energy')) || 1000,
+            maxEnergy: 1000,
+            gps: parseInt(localStorage.getItem('ic_gps')) || 0,
+            upgrades: JSON.parse(localStorage.getItem('ic_upgrades')) || {
+                mine: { cost: 50, gps: 1, count: 0 },
+                knight: { cost: 250, gps: 5, count: 0 },
+                wizard: { cost: 1000, gps: 20, count: 0 }
+            }
+        };
 
-        const goldEl = document.getElementById('gold-count');
-        const gpsEl = document.getElementById('gps-count');
-        const minerBtn = document.getElementById('buy-miner');
-        const knightBtn = document.getElementById('buy-knight');
-        const castle = document.getElementById('castle');
+        // UI Elements
+        const goldEl = document.getElementById('gold-val');
+        const gpsEl = document.getElementById('gps-val');
+        const energyEl = document.getElementById('energy-val');
+        const energyFill = document.getElementById('energy-fill');
+        const castleBtn = document.getElementById('castle-click');
+
+        function saveGame() {
+            localStorage.setItem('ic_gold', state.gold);
+            localStorage.setItem('ic_energy', state.energy);
+            localStorage.setItem('ic_gps', state.gps);
+            localStorage.setItem('ic_upgrades', JSON.stringify(state.upgrades));
+        }
 
         function updateUI() {
-            goldEl.innerText = Math.floor(gold);
-            gpsEl.innerText = goldPerSecond;
-            minerBtn.innerText = `کڕین (${minerCost} زێڕ)`;
-            knightBtn.innerText = `کڕین (${knightCost} زێڕ)`;
+            goldEl.innerText = Math.floor(state.gold).toLocaleString();
+            gpsEl.innerText = state.gps;
+            energyEl.innerText = state.energy;
+            energyFill.style.width = `${(state.energy / state.maxEnergy) * 100}%`;
 
-            minerBtn.disabled = gold < minerCost;
-            knightBtn.disabled = gold < knightCost;
+            // Upgrade buttons state & text
+            document.getElementById('buy-mine').innerText = `کڕین (${state.upgrades.mine.cost})`;
+            document.getElementById('buy-mine').disabled = state.gold < state.upgrades.mine.cost;
 
-            // Save state
-            localStorage.setItem('gold', gold);
-            localStorage.setItem('gps', goldPerSecond);
-            localStorage.setItem('minerCost', minerCost);
-            localStorage.setItem('knightCost', knightCost);
+            document.getElementById('buy-knight').innerText = `کڕین (${state.upgrades.knight.cost})`;
+            document.getElementById('buy-knight').disabled = state.gold < state.upgrades.knight.cost;
+
+            document.getElementById('buy-wizard').innerText = `کڕین (${state.upgrades.wizard.cost})`;
+            document.getElementById('buy-wizard').disabled = state.gold < state.upgrades.wizard.cost;
         }
 
-        // Click Castle Effect & Earnings
-        castle.addEventListener('click', (e) => {
-            gold += 1;
-            
-            // Spawn Floating Number (+1)
+        // Handle Click / Tap
+        castleBtn.addEventListener('click', (e) => {
+            if (state.energy < 1) return;
+
+            state.gold += 1;
+            state.energy -= 1;
+
+            // Haptic Feedback in Telegram
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+
+            // Create float animation
             const num = document.createElement('div');
-            num.className = 'click-number';
+            num.className = 'tap-effect';
             num.innerText = '+1';
-            num.style.left = `${e.clientX - castle.offsetLeft - 10}px`;
-            num.style.top = `${e.clientY - castle.offsetTop - 20}px`;
-            castle.appendChild(num);
+            const rect = castleBtn.getBoundingClientRect();
+            num.style.left = `${e.clientX - rect.left - 10}px`;
+            num.style.top = `${e.clientY - rect.top - 20}px`;
+            castleBtn.appendChild(num);
 
             setTimeout(() => num.remove(), 800);
+
             updateUI();
+            saveGame();
         });
 
-        // Passive Income (Per Second)
-        setInterval(() => {
-            if (goldPerSecond > 0) {
-                gold += goldPerSecond;
+        // Upgrade Actions
+        function buyUpgrade(type) {
+            let item = state.upgrades[type];
+            if (state.gold >= item.cost) {
+                state.gold -= item.cost;
+                state.gps += item.gps;
+                item.count += 1;
+                item.cost = Math.floor(item.cost * 1.5);
                 updateUI();
-            }
-        }, 1000);
-
-        // Buy Functions
-        function buyMiner() {
-            if (gold >= minerCost) {
-                gold -= minerCost;
-                goldPerSecond += 1;
-                minerCost = Math.floor(minerCost * 1.5);
-                updateUI();
+                saveGame();
             }
         }
 
-        function buyKnight() {
-            if (gold >= knightCost) {
-                gold -= knightCost;
-                goldPerSecond += 5;
-                knightCost = Math.floor(knightCost * 1.6);
-                updateUI();
+        // Passive Gold Generation Loop (1 sec)
+        setInterval(() => {
+            if (state.gps > 0) {
+                state.gold += state.gps;
             }
+            // Energy Regen
+            if (state.energy < state.maxEnergy) {
+                state.energy = Math.min(state.maxEnergy, state.energy + 1);
+            }
+            updateUI();
+            saveGame();
+        }, 1000);
+
+        // Tab Switching
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
+        }
+
+        // Share Invite Link
+        function shareInvite() {
+            const botUsername = tg.initDataUnsafe?.bot?.username || "Imperial_Citadel_Bot";
+            const inviteUrl = `https://t.me/share/url?url=https://t.me/${botUsername}&text=وەرە%20ببە%20پاشای%20قەڵا%20و%20زێڕ%20کۆبکەرەوە!`;
+            tg.openTelegramLink(inviteUrl);
         }
 
         updateUI();
