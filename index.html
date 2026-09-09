@@ -1,133 +1,478 @@
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <atomic>
-#include <algorithm>
-#include <cmath>
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tap to Earn Sidebar Edition</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #f59e0b;
+            --text-color: #ffffff;
+            --sidebar-width: 75px;
+        }
 
-class ImperialCitadel {
-public:
-    double gold = 0;
-    int energy = 1000;
-    int maxEnergy = 1000;
-    int tapPower = 1;
-    int tapCost = 100;
-    int gps = 0;
-    int mineCost = 50;
-    std::atomic<bool> running{true};
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
 
-    void startEngine() {
-        std::thread([this]() {
-            while (running) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                gold += gps;
-                if (energy < maxEnergy) {
-                    energy = std::min(maxEnergy, energy + 1);
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            flex-direction: row-reverse; /* Sidebar on Left in RTL */
+        }
+
+        /* VERTICAL SIDEBAR (لای چەپ) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--card-bg);
+            border-right: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            gap: 18px;
+            z-index: 10;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+        }
+
+        .nav-item {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #0f172a;
+            border: 2px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-item:active {
+            transform: scale(0.9);
+        }
+
+        .nav-item.active {
+            background: var(--accent-color);
+            border-color: #fef08a;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 15px;
+            text-align: center;
+            background: var(--card-bg);
+            border-bottom-left-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .score-container {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* TAP GAME ELEMENT */
+        .coin-btn {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fbbf24 0%, #d97706 100%);
+            border: 7px solid #fef08a;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.8rem;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+            position: relative;
+        }
+
+        .coin-btn:active {
+            transform: scale(0.95);
+        }
+
+        .tap-level-badge {
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.4);
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-top: 5px;
+            color: #fef08a;
+        }
+
+        .energy-container {
+            width: 100%;
+            max-width: 260px;
+            margin-top: 25px;
+        }
+
+        .energy-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.2s ease;
+        }
+
+        /* PROFILE & CARDS */
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            border: 1px solid #334155;
+            margin-bottom: 15px;
+        }
+
+        .profile-avatar {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            border: 3px solid #fef08a;
+            overflow: hidden;
+        }
+
+        .card-list {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 14px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #334155;
+        }
+
+        .card button {
+            background: var(--accent-color);
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .floating-text {
+            position: absolute;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffffff;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- VERTICAL SIDEBAR (لای چەپ) -->
+    <div class="sidebar">
+        <div class="nav-item active" onclick="switchTab('tab-game', this)" title="یاری">🎮</div>
+        <div class="nav-item" onclick="switchTab('tab-boost', this)" title="ئاستەکان">🚀</div>
+        <div class="nav-item" onclick="switchTab('tab-profile', this)" title="پڕۆفایل">👤</div>
+        <div class="nav-item" onclick="switchTab('tab-ref', this)" title="هاوڕێیان">👥</div>
+        <div class="nav-item" onclick="switchTab('tab-wallet', this)" title="کیفە">👛</div>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div class="main-container">
+        <div class="header">
+            <div style="font-size: 0.8rem; color: #94a3b8;">باڵانسی گشتی</div>
+            <div class="score-container">
+                🪙 <span id="score">0</span>
+            </div>
+        </div>
+
+        <!-- TAB 1: TAP GAME -->
+        <div id="tab-game" class="tab-content active">
+            <div class="coin-btn" id="coin">
+                🪙
+                <div class="tap-level-badge" id="tap-level-name">تۆپی ١</div>
+            </div>
+
+            <div class="energy-container">
+                <div class="energy-info">
+                    <span>⚡ وزە</span>
+                    <span id="energy-text">1000 / 1000</span>
+                </div>
+                <div class="energy-bar-bg">
+                    <div class="energy-bar-fill" id="energy-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: BOOSTERS -->
+        <div id="tab-boost" class="tab-content">
+            <h3 style="margin-bottom: 15px;">ئاستەکانی کلیک</h3>
+            <div class="card-list">
+                <div class="card">
+                    <div>
+                        <div><strong id="tier-title">تۆپی ١</strong></div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;" id="tier-desc">هێز: +1 سکە</div>
+                    </div>
+                    <button onclick="upgradeTapTier()">بەرزکردنەوە (<span id="cost-tier">200</span>)</button>
+                </div>
+                <div class="card">
+                    <div>
+                        <div><strong>روبۆتی خۆکار</strong></div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">کۆکردنەوەی خۆکار</div>
+                    </div>
+                    <button onclick="buyAutoBot()">کڕین (<span id="cost-autobot">500</span>)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: USER PROFILE -->
+        <div id="tab-profile" class="tab-content">
+            <div class="profile-card">
+                <div class="profile-avatar" id="prof-avatar">👤</div>
+                <h3 id="prof-name">یاریزان</h3>
+                <p id="prof-username" style="color: #94a3b8; font-size: 0.8rem; margin-top: 3px;">@username</p>
+                <div style="margin-top: 10px; font-size: 0.75rem; color: #64748b;">
+                    ID: <span id="prof-id" style="color: #cbd5e1;">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: FRIENDS -->
+        <div id="tab-ref" class="tab-content">
+            <h3 style="margin-bottom: 10px;">بانگهێشت</h3>
+            <p style="text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px;">٥,٠٠٠ سکە بۆ هەر هاوڕێیەک!</p>
+            <button style="padding: 12px 20px; background: var(--accent-color); border: none; border-radius: 8px; font-weight: bold;" onclick="shareRef()">کۆپیکردنی لینک 🔗</button>
+        </div>
+
+        <!-- TAB 5: WALLET -->
+        <div id="tab-wallet" class="tab-content">
+            <div class="profile-card">
+                <h3 style="margin-bottom: 15px;">کیفەی TON</h3>
+                <p id="wallet-status-text" style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 15px;">هیچ کیفەیەک نەبەستراوەتەوە.</p>
+                <button id="wallet-action-btn" style="padding: 10px 18px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%;" onclick="toggleWallet()">Connect</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if(tg) tg.expand();
+
+        let score = parseInt(localStorage.getItem('score')) || 0;
+        let energy = parseInt(localStorage.getItem('energy')) || 1000;
+        let maxEnergy = 1000;
+        let tapTier = parseInt(localStorage.getItem('tapTier')) || 1;
+        let tapValue = tapTier;
+        let costTier = parseInt(localStorage.getItem('costTier')) || 200;
+        let autoBotRate = parseInt(localStorage.getItem('autoBotRate')) || 0;
+        let costAutoBot = parseInt(localStorage.getItem('costAutoBot')) || 500;
+        let walletAddress = localStorage.getItem('walletAddress') || null;
+
+        const scoreEl = document.getElementById('score');
+        const energyTextEl = document.getElementById('energy-text');
+        const energyFillEl = document.getElementById('energy-fill');
+        const coinBtn = document.getElementById('coin');
+
+        function loadUserProfile() {
+            const user = tg?.initDataUnsafe?.user;
+            if (user) {
+                document.getElementById('prof-name').innerText = `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'یاریزان';
+                document.getElementById('prof-username').innerText = user.username ? `@${user.username}` : '@no_username';
+                document.getElementById('prof-id').innerText = user.id;
+                if (user.photo_url) {
+                    document.getElementById('prof-avatar').innerHTML = `<img src="${user.photo_url}" style="width:100%;height:100%;object-fit:cover;">`;
                 }
             }
-        }).detach();
-    }
-
-    void tap() {
-        if (energy >= tapPower) {
-            gold += tapPower;
-            energy -= tapPower;
-            std::cout << "✨ کلیک کرا! +" << tapPower << " زێڕ | وزە: " << energy << "/" << maxEnergy << std::endl;
-        } else {
-            std::cout << "⚠️ وزەت تەواو بووە!" << std::endl;
         }
-    }
 
-    void buyFullTank() {
-        if (gold >= 1000) {
-            gold -= 1000;
-            energy = maxEnergy;
-            std::cout << "⚡ وزەکەت بە تەواوی پڕکرایەوە!" << std::endl;
-        } else {
-            std::cout << "❌ زێڕی پێویستت نییە!" << std::endl;
+        function updateUI() {
+            scoreEl.innerText = score.toLocaleString();
+            energyTextEl.innerText = `${energy} / ${maxEnergy}`;
+            energyFillEl.style.width = `${(energy / maxEnergy) * 100}%`;
+            document.getElementById('tap-level-name').innerText = `تۆپی ${tapTier}`;
+
+            document.getElementById('tier-title').innerText = `تۆپی ${tapTier}`;
+            document.getElementById('tier-desc').innerText = `هێز: +${tapTier} سکە`;
+            document.getElementById('cost-tier').innerText = costTier;
+            document.getElementById('cost-autobot').innerText = costAutoBot;
+
+            if (walletAddress) {
+                document.getElementById('wallet-status-text').innerText = `بەستراوەتەوە:\n${walletAddress.substring(0,6)}...${walletAddress.substring(walletAddress.length-4)}`;
+                document.getElementById('wallet-action-btn').innerText = 'Disconnect';
+                document.getElementById('wallet-action-btn').style.background = '#dc2626';
+            } else {
+                document.getElementById('wallet-status-text').innerText = 'هیچ کیفەیەک نەبەستراوەتەوە.';
+                document.getElementById('wallet-action-btn').innerText = 'Connect Wallet';
+                document.getElementById('wallet-action-btn').style.background = '#2563eb';
+            }
+            
+            localStorage.setItem('score', score);
+            localStorage.setItem('energy', energy);
+            localStorage.setItem('tapTier', tapTier);
+            localStorage.setItem('autoBotRate', autoBotRate);
+            localStorage.setItem('costTier', costTier);
+            localStorage.setItem('costAutoBot', costAutoBot);
         }
-    }
 
-    void buyMultiTap() {
-        if (gold >= tapCost) {
-            gold -= tapCost;
-            tapPower += 1;
-            tapCost = std::floor(tapCost * 2);
-            std::cout << "👆 هێزی کلیک بەرزکرایەوە بۆ +" << tapPower << std::endl;
-        } else {
-            std::cout << "❌ زێڕی پێویستت نییە!" << std::endl;
+        coinBtn.addEventListener('click', (e) => {
+            if (energy >= tapValue) {
+                score += tapValue;
+                energy -= tapValue;
+
+                if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+                const rect = coinBtn.getBoundingClientRect();
+                const floatEl = document.createElement('div');
+                floatEl.className = 'floating-text';
+                floatEl.innerText = `+${tapValue}`;
+                floatEl.style.left = `${e.clientX - rect.left}px`;
+                floatEl.style.top = `${e.clientY - rect.top}px`;
+                coinBtn.appendChild(floatEl);
+
+                setTimeout(() => floatEl.remove(), 800);
+                updateUI();
+            }
+        });
+
+        setInterval(() => {
+            let changed = false;
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + 1);
+                changed = true;
+            }
+            if (autoBotRate > 0) {
+                score += autoBotRate;
+                changed = true;
+            }
+            if(changed) updateUI();
+        }, 1000);
+
+        function upgradeTapTier() {
+            if (score >= costTier) {
+                score -= costTier;
+                tapTier += 1;
+                tapValue = tapTier;
+                costTier = Math.floor(costTier * 2.5);
+                updateUI();
+            } else {
+                alert('سکەی پێویستت نییە!');
+            }
         }
-    }
 
-    void buyMine() {
-        if (gold >= mineCost) {
-            gold -= mineCost;
-            gps += 1;
-            mineCost = std::floor(mineCost * 1.5);
-            std::cout << "⛏️ کانگای زێڕ کڕدرا! داهات: +" << gps << "/چرکە" << std::endl;
-        } else {
-            std::cout << "❌ زێڕی پێویستت نییە!" << std::endl;
+        function buyAutoBot() {
+            if (score >= costAutoBot) {
+                score -= costAutoBot;
+                autoBotRate += 1;
+                costAutoBot *= 2;
+                updateUI();
+            } else {
+                alert('سکەی پێویستت نییە!');
+            }
         }
-    }
 
-    void claimDaily() {
-        gold += 1000;
-        std::cout << "🎁 پاداشتی ڕۆژانە (+1000 زێڕ) وەرگیرا!" << std::endl;
-    }
-
-    void tonShop(int opt) {
-        if (opt == 1) {
-            maxEnergy += 5000;
-            energy += 5000;
-            std::cout << "💎 +5,000 وزەی زیادە زێدە کرا!" << std::endl;
-        } else if (opt == 2) {
-            gold += 100000;
-            std::cout << "💎 +100,000 زێڕی خێرا زێدە کرا!" << std::endl;
+        function toggleWallet() {
+            if (walletAddress) {
+                walletAddress = null;
+                localStorage.removeItem('walletAddress');
+            } else {
+                walletAddress = "EQD41-W56...abc78";
+                localStorage.setItem('walletAddress', walletAddress);
+            }
+            updateUI();
         }
-    }
 
-    void inviteFriend() {
-        gold += 2000;
-        std::cout << "👥 هاوڕێیەک بانگهێشت کرا! +2,000 زێڕ وەربگیرا." << std::endl;
-    }
-
-    void showStatus() {
-        std::cout << "\n--- 🏰 Imperial Citadel Status ---" << std::endl;
-        std::cout << "💰 زێڕ: " << (long)gold << " | ⚡ وزە: " << energy << "/" << maxEnergy << std::endl;
-        std::cout << "📈 داهاتی چرکە: +" << gps << "/sec | 👆 هێزی کلیک: +" << tapPower << std::endl;
-        std::cout << "-----------------------------------" << std::endl;
-    }
-};
-
-int main() {
-    ImperialCitadel game;
-    game.startEngine();
-
-    int choice = -1;
-    while (choice != 0) {
-        game.showStatus();
-        std::cout << "1: کلیک | 2: بووستەر | 3: دیاری ڕۆژانە | 4: فرۆشگای TON | 5: بانگهێشت | 0: دەرچوون\nهەڵبژاردن: ";
-        std::cin >> choice;
-
-        if (choice == 1) game.tap();
-        else if (choice == 2) {
-            char sub;
-            std::cout << "a: Full Tank | b: MultiTap | c: Mine\nکام بووستەر؟ ";
-            std::cin >> sub;
-            if (sub == 'a') game.buyFullTank();
-            else if (sub == 'b') game.buyMultiTap();
-            else if (sub == 'c') game.buyMine();
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            el.classList.add('active');
         }
-        else if (choice == 3) game.claimDaily();
-        else if (choice == 4) {
-            int s;
-            std::cout << "1: 0.1 TON (+5000 وزە) | 2: 0.5 TON (+100000 زێڕ)\nهەڵبژاردن: ";
-            std::cin >> s;
-            game.tonShop(s);
-        }
-        else if (choice == 5) game.inviteFriend();
-    }
 
-    game.running = false;
-    return 0;
-}
+        function shareRef() {
+            const user = tg?.initDataUnsafe?.user?.id || 'demo';
+            navigator.clipboard.writeText(`https://t.me/Dyakotbot/Play?startapp=${user}`);
+            alert('لینکی دەعوەت کۆپی کرا!');
+        }
+
+        loadUserProfile();
+        updateUI();
+    </script>
+</body>
+</html>
